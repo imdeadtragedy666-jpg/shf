@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SayHighFriends.com - Connect & Sesh Online</title>
+    <!-- Tailwind CSS & FontAwesome Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#000000',
+                        cardbg: '#0d1117',
+                        neon: '#00ff66',
+                        neonhover: '#00cc52',
+                        darkborder: '#1f2937'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes floatLeaf {
+            0% { transform: translateY(110vh) translateX(0) rotate(0deg) scale(0.8); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) translateX(60px) rotate(360deg) scale(1.2); opacity: 0; }
+        }
+        @keyframes sparkleAnim {
+            0%, 100% { filter: drop-shadow(0 0 2px rgba(0,255,102,0.4)) brightness(1); }
+            50% { filter: drop-shadow(0 0 12px rgba(0,255,102,0.9)) brightness(1.4); }
+        }
+        .floating-leaf {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatLeaf 10s linear infinite, sparkleAnim 2.5s ease-in-out infinite;
+        }
+        /* CRT Scanline overlay for Stoner TV */
+        .crt-scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.35) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.04),
+                rgba(0, 255, 0, 0.02),
+                rgba(0, 0, 255, 0.04)
+            );
+            background-size: 100% 3px, 6px 100%;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00ff66; }
+    </style>
+</head>
+<body class="bg-darkbg text-gray-100 min-h-screen font-sans selection:bg-neon selection:text-black relative overflow-x-hidden">
+
+    <!-- Background Floating Sparkling Cannabis Leaves -->
+    <div id="leaf-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-darkborder px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('feed')">
+                <div class="w-10 h-10 rounded-full bg-neon/10 border border-neon flex items-center justify-center text-neon text-xl shadow-[0_0_15px_rgba(0,255,102,0.4)]">
+                    <i class="fa-solid fa-cannabis"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wider flex items-center">
+                        <span class="text-white">say</span><span class="text-neon">high</span><span class="text-white">friends</span><span class="text-neon">.com</span>
+                    </h1>
+                    <p class="text-xs text-gray-400 flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-neon animate-pulse"></span> Cloud Synced &bull; <span id="clock-display" class="font-mono text-neon">4:20 PM</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center gap-1 bg-cardbg p-1 rounded-xl border border-darkborder overflow-x-auto max-w-full">
+                <button onclick="switchTab('feed')" id="nav-feed" class="nav-btn px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all bg-neon text-black flex items-center gap-2 shadow-[0_0_10px_rgba(0,255,102,0.3)]">
+                    <i class="fa-solid fa-newspaper"></i> Feed
+                </button>
+                <button onclick="switchTab('buddies')" id="nav-buddies" class="nav-btn px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> Buddies
+                </button>
+                <button onclick="switchTab('messages')" id="nav-messages" class="nav-btn px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2 relative">
+                    <i class="fa-solid fa-comments text-neon"></i> Messages
+                    <span id="unread-msg-badge" class="bg-neon text-black text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">2</span>
+                </button>
+                <button onclick="switchTab('lounges')" id="nav-lounges" class="nav-btn px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
+                    <i class="fa-solid fa-couch"></i> Lounges
+                </button>
+                <button onclick="switchTab('livesesh')" id="nav-livesesh" class="nav-btn px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
+                    <i class="fa-solid fa-video text-red-400 animate-pulse"></i> Live Sesh
+                </button>
+                <button onclick="switchTab('tv')" id="nav-tv" class="nav-btn px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
+                    <i class="fa-solid fa-tv"></i> Stoner TV
+                </button>
+                <button onclick="switchTab('fanpages')" id="nav-fanpages" class="nav-btn px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-neon"></i> Fan Pages
+                </button>
+            </nav>
+
+            <!-- Status & Profile CTA -->
+            <div class="flex items-center gap-3">
+                <select id="user-status-select" onchange="updateUserStatus()" class="bg-cardbg text-xs border border-darkborder rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:border-neon">
+                    <option value="🌿 Ready to Sesh">🌿 Ready to Sesh</option>
+                    <option value="🔥 Currently Lit">🔥 Currently Lit</option>
+                    <option value="🛋️ Chilling">🛋️ Chilling</option>
+                </select>
+
+                <!-- Weed Leaf Call/Text CTA Button -->
+                <a href="tel:+19499099123" class="bg-cardbg hover:bg-neon/10 text-neon border border-neon/50 font-bold px-3 py-2 rounded-xl text-xs md:text-sm transition-all shadow-[0_0_12px_rgba(0,255,102,0.2)] flex items-center gap-1.5 whitespace-nowrap">
+                    <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C11.1 5.6 10.6 8.8 11.1 11.8C9.2 9.4 7.1 7.6 4.5 6.8C5.9 9.2 7.7 11.2 10.1 12.6C7.1 12.1 4.2 12.3 1.8 13.5C4.4 14.5 7.2 14.9 10.1 14.5C8.3 15.8 6.8 17.5 5.9 19.6C8.1 18.6 9.9 17.1 11.2 15.2V22H12.8V15.2C14.1 17.1 15.9 18.6 18.1 19.6C17.2 17.5 15.7 15.8 13.9 14.5C16.8 14.9 19.6 14.5 22.2 13.5C19.8 12.3 16.9 12.1 13.9 12.6C16.3 11.2 18.1 9.2 19.5 6.8C16.9 7.6 14.8 9.4 12.9 11.8C13.4 8.8 12.9 5.6 12 2Z"/></svg>
+                    <span>Call or Text +1(949)909-9123</span>
+                </a>
+
+                <div id="header-profile-section">
+                    <button onclick="openProfileModal()" class="bg-neon hover:bg-neonhover text-black font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.3)] flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Make Profile
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 relative z-10">
+
+        <!-- TAB 1: MY FEED -->
+        <section id="tab-feed" class="tab-content space-y-6">
+            <div id="feed-welcome-banner" class="bg-gradient-to-r from-cardbg via-black to-cardbg border border-neon/30 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
+                <div class="absolute -right-10 -bottom-10 text-neon/10 text-9xl pointer-events-none">
+                    <i class="fa-solid fa-cannabis"></i>
+                </div>
+                <div class="max-w-2xl">
+                    <h2 class="text-2xl md:text-3xl font-black text-white mb-2">Welcome to the Global Sesh Circle 🌿</h2>
+                    <p class="text-gray-300 text-sm mb-4">Connect with old friends, meet new smoking buddies, share your favorite strains, and join live sesh rooms right from your personalized feed.</p>
+                    <button onclick="openProfileModal()" class="bg-neon hover:bg-neonhover text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)]">
+                        Create Your Profile Now (21+)
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Sidebar: Profile Widget -->
+                <div class="space-y-6">
+                    <div class="bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg text-center">
+                        <div class="relative w-24 h-24 mx-auto mb-3">
+                            <!-- Default Blank Avatar Placeholder (No Stock Photo) -->
+                            <div id="my-avatar-placeholder" class="w-full h-full rounded-full bg-black/80 border-2 border-neon flex items-center justify-center text-gray-500 text-3xl shadow-[0_0_10px_rgba(0,255,102,0.3)]">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <img id="my-avatar-display" src="" class="hidden w-full h-full object-cover rounded-full border-2 border-neon shadow-[0_0_10px_rgba(0,255,102,0.3)]" alt="Avatar">
+                            <span class="absolute bottom-0 right-0 w-5 h-5 bg-neon rounded-full border-2 border-black flex items-center justify-center text-black text-[10px]">✓</span>
+                        </div>
+                        <h3 id="my-name-display" class="font-bold text-lg text-white">Guest Stoned</h3>
+                        <p id="my-bio-display" class="text-xs text-gray-400 mt-1">Must be 21+ to set up your profile, strain preference, and photo.</p>
+                        <div class="mt-3 inline-block bg-neon/10 text-neon border border-neon/30 text-xs px-3 py-1 rounded-full font-mono" id="my-strain-display">Strain: OG Kush</div>
+                        <div class="mt-4 pt-4 border-t border-darkborder flex justify-around text-center">
+                            <div>
+                                <div id="my-puffs-count" class="font-extrabold text-neon text-lg">42</div>
+                                <div class="text-[10px] text-gray-400">Total Puffs</div>
+                            </div>
+                            <div>
+                                <div class="font-extrabold text-white text-lg">12</div>
+                                <div class="text-[10px] text-gray-400">Buddies</div>
+                            </div>
+                        </div>
+                        <button onclick="openProfileModal()" class="w-full mt-4 bg-white/5 hover:bg-white/10 text-gray-200 border border-darkborder py-2 rounded-xl text-xs font-semibold transition-all">
+                            Edit Profile
+                        </button>
+                    </div>
+
+                    <!-- Online Sesh Buddies Widget -->
+                    <div class="bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg">
+                        <h4 class="font-bold text-white text-sm mb-3 flex items-center justify-between">
+                            <span><i class="fa-solid fa-users text-neon mr-2"></i> Active Seshers</span>
+                            <span class="w-2 h-2 rounded-full bg-neon animate-ping"></span>
+                        </h4>
+                        <div class="space-y-3" id="sidebar-buddies-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Feed Area -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Create Post Box -->
+                    <div class="bg-cardbg border border-darkborder rounded-2xl p-4 shadow-lg">
+                        <div class="flex gap-3 items-start">
+                            <div id="post-box-avatar-placeholder" class="w-10 h-10 rounded-full bg-black/80 border border-neon flex items-center justify-center text-gray-500 text-sm shrink-0">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <img id="post-box-avatar" src="" class="hidden w-10 h-10 rounded-full object-cover border border-neon shrink-0" alt="User">
+                            <div class="flex-1">
+                                <textarea id="post-content-input" rows="2" placeholder="What's burning in your bowl right now? Share with the circle..." class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon resize-none"></textarea>
+                                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-2 border-t border-darkborder">
+                                    <div class="flex items-center gap-2">
+                                        <select id="post-strain-select" class="bg-black text-xs border border-darkborder rounded-lg px-2 py-1.5 text-gray-300 focus:outline-none focus:border-neon">
+                                            <option value="🔥 OG Kush">🔥 OG Kush</option>
+                                            <option value="💨 Blue Dream">💨 Blue Dream</option>
+                                            <option value="🌿 Gelato #33">🌿 Gelato #33</option>
+                                            <option value="🍍 Pineapple Express">🍍 Pineapple Express</option>
+                                            <option value="🔮 Purple Haze">🔮 Purple Haze</option>
+                                        </select>
+                                    </div>
+                                    <button onclick="createPost()" class="bg-neon hover:bg-neonhover text-black font-bold px-5 py-2 rounded-xl text-xs transition-all shadow-[0_0_10px_rgba(0,255,102,0.3)] flex items-center gap-1.5">
+                                        <i class="fa-solid fa-paper-plane"></i> Share Sesh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Posts Stream -->
+                    <div id="posts-stream" class="space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: DISCOVER BUDDIES -->
+        <section id="tab-buddies" class="tab-content hidden space-y-6">
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Find Smoking Buddies 🌿</h2>
+                    <p class="text-gray-400 text-sm mt-1">Connect with stoners nearby or around the world who share your favorite strains and vibes.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <input type="text" id="buddy-search-input" onkeyup="filterBuddies()" placeholder="Search by strain, city..." class="bg-black/50 border border-darkborder rounded-xl px-4 py-2 text-sm text-gray-200 focus:outline-none focus:border-neon w-full md:w-64">
+                    <select id="buddy-filter-strain" onchange="filterBuddies()" class="bg-black border border-darkborder rounded-xl px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-neon">
+                        <option value="all">All Strains</option>
+                        <option value="OG Kush">OG Kush</option>
+                        <option value="Blue Dream">Blue Dream</option>
+                        <option value="Gelato">Gelato</option>
+                        <option value="Pineapple Express">Pineapple Express</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="buddies-grid">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- TAB 2.5: BUDDY MESSAGES (DIRECT MESSAGING) -->
+        <section id="tab-messages" class="tab-content hidden space-y-6">
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-comments text-neon"></i> Buddy Direct Messages
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Private 1-on-1 sesh chats with your connected buddies.</p>
+                </div>
+                <button onclick="switchTab('buddies')" class="bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/40 font-bold px-4 py-2 rounded-xl text-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> Find More Buddies
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+                <!-- Left: Conversations List -->
+                <div class="bg-cardbg border border-darkborder rounded-2xl p-4 flex flex-col overflow-hidden shadow-lg">
+                    <div class="mb-3">
+                        <input type="text" id="dm-buddy-search" onkeyup="renderDMConversations()" placeholder="Search conversations..." class="w-full bg-black/50 border border-darkborder rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-neon">
+                    </div>
+                    <div id="dm-conversations-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Right: Active Chat Thread -->
+                <div class="lg:col-span-2 bg-cardbg border border-darkborder rounded-2xl flex flex-col overflow-hidden shadow-lg">
+                    <!-- Chat Header -->
+                    <div class="p-4 border-b border-darkborder bg-black/50 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <img id="dm-active-avatar" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150" class="w-10 h-10 rounded-full object-cover border border-neon">
+                            <div>
+                                <h3 id="dm-active-name" class="font-bold text-white text-sm">BlazeMaster</h3>
+                                <p id="dm-active-status" class="text-[11px] text-neon">🔥 Currently Lit &bull; Denver, CO</p>
+                            </div>
+                        </div>
+                        <button onclick="sendQuickSeshInvite()" class="bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/40 font-bold px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-cannabis"></i> Send Sesh Invite
+                        </button>
+                    </div>
+
+                    <!-- Chat Messages Feed -->
+                    <div id="dm-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 bg-black/30">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Message Input Box -->
+                    <div class="p-4 border-t border-darkborder bg-black/50 flex gap-2">
+                        <input type="text" id="dm-chat-input" onkeypress="handleDMKey(event)" placeholder="Write a message to your buddy..." class="flex-1 bg-black/50 border border-darkborder rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-neon">
+                        <button onclick="sendDirectMessage()" class="bg-neon hover:bg-neonhover text-black font-bold px-5 py-3 rounded-xl text-sm transition-all shadow-[0_0_10px_rgba(0,255,102,0.3)] flex items-center gap-1.5">
+                            <i class="fa-solid fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: SMOKE LOUNGES -->
+        <section id="tab-lounges" class="tab-content hidden space-y-6">
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg">
+                <h2 class="text-2xl font-black text-white">Virtual Smoke Lounges 🛋️</h2>
+                <p class="text-gray-400 text-sm mt-1">Jump into themed rooms to chat, listen to music, and sesh with like-minded members.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Lounge 1 -->
+                <div class="bg-cardbg border border-darkborder rounded-2xl p-6 flex flex-col justify-between hover:border-neon/50 transition-all shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 bg-neon text-black text-[10px] font-bold px-3 py-1 rounded-bl-xl">LIVE ROOM</div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-neon/10 border border-neon/40 flex items-center justify-center text-neon text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-headphones"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-white">Lofi & Chill Sesh</h3>
+                        <p class="text-xs text-gray-400 mt-2">Relaxing lofi beats, peaceful vibes, and mellow conversation. Perfect for unwinding.</p>
+                        <div class="mt-4 flex items-center gap-2 text-xs text-gray-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-neon animate-pulse"></span> 24 Seshers Online
+                        </div>
+                    </div>
+                    <button onclick="openLoungeModal('Lofi & Chill Sesh')" class="mt-6 w-full bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/40 font-bold py-2.5 rounded-xl text-xs transition-all">
+                        Enter Lounge
+                    </button>
+                </div>
+
+                <!-- Lounge 2 -->
+                <div class="bg-cardbg border border-darkborder rounded-2xl p-6 flex flex-col justify-between hover:border-neon/50 transition-all shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 bg-neon text-black text-[10px] font-bold px-3 py-1 rounded-bl-xl">LIVE ROOM</div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-neon/10 border border-neon/40 flex items-center justify-center text-neon text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-joint"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-white">Indica Couch Lock Club</h3>
+                        <p class="text-xs text-gray-400 mt-2">For heavy hitters and deep thinkers. Sink into your couch and talk about the universe.</p>
+                        <div class="mt-4 flex items-center gap-2 text-xs text-gray-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-neon animate-pulse"></span> 18 Seshers Online
+                        </div>
+                    </div>
+                    <button onclick="openLoungeModal('Indica Couch Lock Club')" class="mt-6 w-full bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/40 font-bold py-2.5 rounded-xl text-xs transition-all">
+                        Enter Lounge
+                    </button>
+                </div>
+
+                <!-- Lounge 3 -->
+                <div class="bg-cardbg border border-darkborder rounded-2xl p-6 flex flex-col justify-between hover:border-neon/50 transition-all shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 bg-neon text-black text-[10px] font-bold px-3 py-1 rounded-bl-xl">LIVE ROOM</div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-neon/10 border border-neon/40 flex items-center justify-center text-neon text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-seedling"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-white">Strain Review & Connoisseur Hub</h3>
+                        <p class="text-xs text-gray-400 mt-2">Discussing terps, live resins, growing tips, and reviewing top-shelf flower.</p>
+                        <div class="mt-4 flex items-center gap-2 text-xs text-gray-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-neon animate-pulse"></span> 31 Seshers Online
+                        </div>
+                    </div>
+                    <button onclick="openLoungeModal('Strain Review Hub')" class="mt-6 w-full bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/40 font-bold py-2.5 rounded-xl text-xs transition-all">
+                        Enter Lounge
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: LIVE SMOKE SESSIONS -->
+        <section id="tab-livesesh" class="tab-content hidden space-y-6">
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-video text-red-500 animate-pulse"></i> Live Smoke Sessions
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Host or join live interactive video & audio sesh rooms with stoners around the world.</p>
+                </div>
+                <button onclick="openHostSeshModal()" class="bg-neon hover:bg-neonhover text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)] flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i> Host Live Sesh
+                </button>
+            </div>
+
+            <!-- Active Live Sessions Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="live-sesh-grid">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- TAB 5: STONER TV -->
+        <section id="tab-tv" class="tab-content hidden space-y-6">
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-tv text-neon"></i> Stoner TV
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Tune in to curated chill visuals, stoner comedy, and music videos.</p>
+                </div>
+                <!-- Admin-Only Controls -->
+                <div class="flex items-center gap-3">
+                    <button id="admin-post-btn" onclick="openAdminPostModal()" class="hidden bg-neon hover:bg-neonhover text-black font-bold px-4 py-2.5 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.3)] flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Post Video to TV
+                    </button>
+                    <button onclick="handleAdminAccess()" id="admin-access-btn" class="bg-cardbg hover:bg-white/10 text-neon border border-neon/40 font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i id="admin-lock-icon" class="fa-solid fa-lock"></i>
+                        <span id="admin-btn-label">Owner TV Controls</span>
+                        <span id="admin-queue-badge" class="bg-neon text-black text-xs px-1.5 py-0.5 rounded-full font-bold">1</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Featured Video Player with Snow Fuzz / Static Screen & Bottom Corner Play Button -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl overflow-hidden shadow-2xl">
+                <div class="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
+                    <!-- YouTube Player (Hidden until Play is clicked) -->
+                    <iframe id="main-tv-player" class="w-full h-full hidden" src="" title="Stoner TV" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+                    <!-- Snow Fuzz / TV Static Overlay Screen -->
+                    <div id="tv-static-screen" class="absolute inset-0 w-full h-full flex items-center justify-center bg-black select-none">
+                        <canvas id="tv-snow-canvas" class="w-full h-full object-cover opacity-80"></canvas>
+                        <div class="absolute inset-0 crt-scanlines pointer-events-none"></div>
+
+                        <!-- Center STONER TV Graphic Overlay -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4 text-center">
+                            <div class="bg-black/75 backdrop-blur-sm border-2 border-neon/70 px-8 py-5 rounded-2xl shadow-[0_0_35px_rgba(0,255,102,0.45)]">
+                                <div class="flex items-center justify-center gap-3 text-neon text-3xl md:text-5xl font-black tracking-widest uppercase drop-shadow-[0_0_12px_rgba(0,255,102,0.85)]">
+                                    <i class="fa-solid fa-cannabis"></i>
+                                    <span>STONER TV</span>
+                                </div>
+                                <p class="text-xs md:text-sm text-gray-300 font-mono mt-2 tracking-wider uppercase">CH 420 &bull; Press Play in Bottom Corner to Tune In</p>
+                            </div>
+                        </div>
+
+                        <!-- Bottom-Left Corner Play Button -->
+                        <button onclick="startStonerTV()" aria-label="Play Stoner TV" class="absolute bottom-4 left-4 z-20 bg-neon hover:bg-neonhover text-black font-extrabold px-4 py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-[0_0_20px_rgba(0,255,102,0.6)] flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Play</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Link Beneath Stoner TV for Community Video Submissions -->
+                <div class="px-6 py-3 bg-black/60 border-t border-b border-darkborder flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span class="text-gray-400">Got a trippy visual, music mix, or stoner clip?</span>
+                    <button onclick="openVideoSubmitModal()" class="text-neon hover:text-neonhover font-bold underline flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-paper-plane"></i> Submit a video for Stoner TV review
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <span id="tv-status-pill" class="text-xs bg-neon/10 text-neon border border-neon/30 px-3 py-1 rounded-full font-bold">STANDBY &bull; CH 420</span>
+                    <h3 id="main-tv-title" class="font-bold text-xl text-white mt-3">Lofi Hip Hop Radio - Beats to Chill / Smoke To</h3>
+                    <p id="main-tv-desc" class="text-xs text-gray-400 mt-1">Click the Play button in the bottom-left corner of the screen to start streaming Stoner TV.</p>
+                </div>
+            </div>
+
+            <!-- Channel Playlist Grid -->
+            <div>
+                <h3 class="font-bold text-white text-lg mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-neon"></i> Sesh Channel Playlist
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="tv-playlist-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: FAN PAGES -->
+        <section id="tab-fanpages" class="tab-content hidden space-y-6">
+            <div class="bg-cardbg border border-darkborder rounded-2xl p-6 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-star text-neon"></i> Community Fan Pages
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Explore custom fan hubs created by members or launch your own branded page.</p>
+                </div>
+                <button onclick="openFanPageModal()" class="bg-neon hover:bg-neonhover text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)] flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i> Create Fan Page
+                </button>
+            </div>
+
+            <!-- Fan Pages Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="fanpages-grid">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- ADVERTISE WITH US BANNER SECTION -->
+        <section class="mt-12 bg-gradient-to-r from-cardbg via-black to-cardbg border border-neon/30 rounded-2xl p-6 md:p-8 shadow-2xl text-center relative overflow-hidden">
+            <div class="absolute -left-10 -top-10 text-neon/5 text-9xl pointer-events-none">
+                <i class="fa-solid fa-bullhorn"></i>
+            </div>
+            <div class="max-w-3xl mx-auto space-y-4">
+                <span class="text-xs bg-neon/10 text-neon border border-neon/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Partner With Us</span>
+                <h3 class="text-2xl md:text-3xl font-black text-white">Want to put your brand in front of active seshers?</h3>
+                <p class="text-gray-300 text-sm">
+                    SayHighFriends.com reaches cannabis enthusiasts, connoisseurs, and lifestyle communities daily. We offer banner placements, sponsored Stoner TV features, and custom lounge partnerships.
+                </p>
+                <div class="pt-2 flex flex-wrap justify-center gap-4">
+                    <a href="tel:+19499099123" class="bg-neon hover:bg-neonhover text-black font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)] flex items-center gap-2">
+                        <svg class="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C11.1 5.6 10.6 8.8 11.1 11.8C9.2 9.4 7.1 7.6 4.5 6.8C5.9 9.2 7.7 11.2 10.1 12.6C7.1 12.1 4.2 12.3 1.8 13.5C4.4 14.5 7.2 14.9 10.1 14.5C8.3 15.8 6.8 17.5 5.9 19.6C8.1 18.6 9.9 17.1 11.2 15.2V22H12.8V15.2C14.1 17.1 15.9 18.6 18.1 19.6C17.2 17.5 15.7 15.8 13.9 14.5C16.8 14.9 19.6 14.5 22.2 13.5C19.8 12.3 16.9 12.1 13.9 12.6C16.3 11.2 18.1 9.2 19.5 6.8C16.9 7.6 14.8 9.4 12.9 11.8C13.4 8.8 12.9 5.6 12 2Z"/></svg>
+                        <span>Call or Text +1(949)909-9123</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: PROFILE SETUP (21+ REQUIRED) -->
+    <div id="profile-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-bold text-xl text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-cannabis text-neon"></i> Create / Edit Profile
+            </h3>
+            <p class="text-xs text-gray-400 mb-3">Customize how other seshers see you in feeds, lounges, and live rooms.</p>
+
+            <!-- 21+ Age Requirement Banner -->
+            <div class="bg-neon/10 border border-neon/40 rounded-xl p-3 mb-4 flex items-center gap-2.5 text-xs text-neon font-semibold">
+                <span class="bg-neon text-black font-black px-2 py-0.5 rounded-md text-[11px] shrink-0">21+</span>
+                <span>You must be 21 years of age or older to make a profile on SayHighFriends.com.</span>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Stoner Name / Handle</label>
+                    <input type="text" id="modal-name-input" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="e.g. BlazingBob420">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Favorite Strain</label>
+                    <select id="modal-strain-select" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon">
+                        <option value="OG Kush">OG Kush</option>
+                        <option value="Blue Dream">Blue Dream</option>
+                        <option value="Gelato #33">Gelato #33</option>
+                        <option value="Pineapple Express">Pineapple Express</option>
+                        <option value="Purple Haze">Purple Haze</option>
+                        <option value="Sour Diesel">Sour Diesel</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Upload Profile Photo (Optional)</label>
+                    <input type="file" id="modal-avatar-file" accept="image/*" class="w-full bg-black/50 border border-darkborder rounded-xl p-2.5 text-xs text-gray-300 focus:outline-none focus:border-neon file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-neon file:text-black hover:file:bg-neonhover file:cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Bio / Vibe</label>
+                    <textarea id="modal-bio-input" rows="3" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon resize-none" placeholder="Tell the circle what you're into..."></textarea>
+                </div>
+                <label class="flex items-start gap-2.5 text-xs text-gray-300 cursor-pointer select-none">
+                    <input type="checkbox" id="modal-age-confirm" class="mt-0.5 accent-[#00ff66] w-4 h-4 rounded">
+                    <span>I confirm that I am <strong>21 years of age or older</strong>.</span>
+                </label>
+                <p id="profile-age-error" class="hidden text-xs text-red-400 font-semibold">You must confirm that you are 21 or older to create a profile.</p>
+                <button onclick="saveProfile()" class="w-full bg-neon hover:bg-neonhover text-black font-bold py-3 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)]">
+                    Save Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE FAN PAGE -->
+    <div id="fanpage-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onclick="closeFanPageModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-bold text-xl text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-star text-neon"></i> Create Fan Page
+            </h3>
+            <p class="text-xs text-gray-400 mb-6">Launch your own community fan hub or strain showcase page.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Fan Page Title</label>
+                    <input type="text" id="fanpage-title-input" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="e.g. Gelato Connoisseurs Club">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Upload Fan Page Photo / Banner</label>
+                    <input type="file" id="fanpage-photo-file" accept="image/*" class="w-full bg-black/50 border border-darkborder rounded-xl p-2.5 text-xs text-gray-300 focus:outline-none focus:border-neon file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-neon file:text-black hover:file:bg-neonhover file:cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Page Description & Goals</label>
+                    <textarea id="fanpage-desc-input" rows="3" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon resize-none" placeholder="What is this fan page dedicated to?"></textarea>
+                </div>
+                <button onclick="submitFanPage()" class="w-full bg-neon hover:bg-neonhover text-black font-bold py-3 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)]">
+                    Publish Fan Page
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: LOUNGE CHAT -->
+    <div id="lounge-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl overflow-hidden relative">
+            <div class="p-4 border-b border-darkborder flex items-center justify-between bg-black/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-neon/10 border border-neon/40 flex items-center justify-center text-neon">
+                        <i class="fa-solid fa-couch"></i>
+                    </div>
+                    <div>
+                        <h3 id="lounge-modal-title" class="font-bold text-white text-base">Lofi & Chill Sesh</h3>
+                        <p class="text-xs text-gray-400">Live Virtual Lounge &bull; <span class="text-neon">Connected</span></p>
+                    </div>
+                </div>
+                <button onclick="closeLoungeModal()" class="text-gray-400 hover:text-white text-lg px-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div id="lounge-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-black/30">
+                <!-- Chat messages populated by JS -->
+            </div>
+
+            <div class="p-4 border-t border-darkborder bg-black/50 flex gap-2">
+                <input type="text" id="lounge-chat-input" onkeypress="handleLoungeKey(event)" placeholder="Say something to the lounge..." class="flex-1 bg-black/50 border border-darkborder rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-neon">
+                <button onclick="sendLoungeMessage()" class="bg-neon hover:bg-neonhover text-black font-bold px-5 py-3 rounded-xl text-sm transition-all">
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SUBMIT STONER TV VIDEO (COMMUNITY SUBMISSIONS) -->
+    <div id="video-submit-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onclick="closeVideoSubmitModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-bold text-xl text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-video text-neon"></i> Submit Video for Review
+            </h3>
+            <p class="text-xs text-gray-400 mb-6">Send your favorite YouTube link for the site owner to review and choose for Stoner TV!</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Video Title</label>
+                    <input type="text" id="sub-video-title" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="e.g. Epic 420 Visualizer Mix">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">YouTube URL or Link</label>
+                    <input type="text" id="sub-video-url" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Short Description</label>
+                    <textarea id="sub-video-desc" rows="3" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon resize-none" placeholder="Why should this be chosen for Stoner TV?"></textarea>
+                </div>
+                <button onclick="submitVideoToAdmin()" class="w-full bg-neon hover:bg-neonhover text-black font-bold py-3 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)]">
+                    Submit Video for Owner Review
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: OWNER ADMIN PIN UNLOCK -->
+    <div id="admin-pin-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+            <button onclick="closeAdminPinModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-bold text-lg text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-neon"></i> Owner TV Access
+            </h3>
+            <p class="text-xs text-gray-400 mb-4">Only the site owner can post directly or approve videos to Stoner TV. Enter your Owner PIN.</p>
+            <input type="password" id="admin-pin-input" onkeypress="if(event.key==='Enter') verifyAdminPin()" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon mb-3" placeholder="Enter Owner PIN (Default: 4200)">
+            <p id="admin-pin-error" class="hidden text-xs text-red-400 mb-3">Incorrect Owner PIN.</p>
+            <button onclick="verifyAdminPin()" class="w-full bg-neon hover:bg-neonhover text-black font-bold py-2.5 rounded-xl text-sm transition-all">
+                Unlock Stoner TV Controls
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: OWNER DIRECT POST TO STONER TV -->
+    <div id="admin-post-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onclick="closeAdminPostModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-bold text-xl text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-tv text-neon"></i> Post Directly to Stoner TV
+            </h3>
+            <p class="text-xs text-gray-400 mb-6">Publish a video immediately to Stoner TV.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Video Title</label>
+                    <input type="text" id="owner-video-title" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="e.g. Late Night Sesh Mix">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">YouTube URL</label>
+                    <input type="text" id="owner-video-url" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Description</label>
+                    <textarea id="owner-video-desc" rows="2" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon resize-none" placeholder="Video details..."></textarea>
+                </div>
+                <button onclick="ownerDirectPostVideo()" class="w-full bg-neon hover:bg-neonhover text-black font-bold py-3 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)]">
+                    Publish Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADMIN REVIEW QUEUE -->
+    <div id="admin-queue-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden relative">
+            <div class="p-4 border-b border-darkborder flex items-center justify-between bg-black/50">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-neon"></i> Owner Stoner TV Queue & Controls
+                </h3>
+                <button onclick="closeAdminQueueModal()" class="text-gray-400 hover:text-white text-lg px-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-4 border-b border-darkborder bg-black/30 flex flex-wrap items-center justify-between gap-2">
+                <p class="text-xs text-gray-400">Approve community submissions to add them to Stoner TV, or post your own video directly.</p>
+                <button onclick="closeAdminQueueModal(); openAdminPostModal();" class="bg-neon hover:bg-neonhover text-black font-bold px-3 py-1.5 rounded-lg text-xs">
+                    + Post New Video
+                </button>
+            </div>
+
+            <div id="admin-queue-list" class="flex-1 p-4 overflow-y-auto space-y-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HOST LIVE SESH -->
+    <div id="host-sesh-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-darkborder rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onclick="closeHostSeshModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-bold text-xl text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-video text-red-500"></i> Host Live Sesh Room
+            </h3>
+            <p class="text-xs text-gray-400 mb-6">Start your own live video/audio smoking circle and invite friends!</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Room Title</label>
+                    <input type="text" id="host-room-title" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="e.g. Friday Night Wake & Bake">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Room Vibe / Topic</label>
+                    <input type="text" id="host-room-vibe" class="w-full bg-black/50 border border-darkborder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-neon" placeholder="e.g. Chill talk & munchies">
+                </div>
+                <button onclick="createLiveSeshRoom()" class="w-full bg-neon hover:bg-neonhover text-black font-bold py-3 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(0,255,102,0.4)]">
+                    Go Live Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ACTIVE LIVE SESH ROOM -->
+    <div id="live-room-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex flex-col p-4 md:p-8">
+        <div class="max-w-7xl mx-w-full w-full flex justify-between items-center mb-4 pb-4 border-b border-darkborder">
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+                <div>
+                    <h3 id="active-room-title" class="font-bold text-white text-lg">Live Sesh Room</h3>
+                    <p class="text-xs text-gray-400">Host: <span id="active-room-host" class="text-neon">You</span></p>
+                </div>
+            </div>
+            <button onclick="leaveLiveSeshRoom()" class="bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/40 px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                Leave Room
+            </button>
+        </div>
+
+        <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
+            <!-- Video Grids -->
+            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
+                <div class="bg-cardbg border border-darkborder rounded-2xl aspect-video relative overflow-hidden flex items-center justify-center">
+                    <div class="w-20 h-20 rounded-full bg-black border border-neon flex items-center justify-center text-neon text-3xl">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-lg text-xs text-white font-medium flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-neon"></span> <span id="room-host-label">BlazingBob420</span> (Host)
+                    </div>
+                </div>
+                <div class="bg-cardbg border border-darkborder rounded-2xl aspect-video relative overflow-hidden flex items-center justify-center">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500" class="w-full h-full object-cover">
+                    <div class="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-lg text-xs text-white font-medium flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-neon"></span> StonedSam
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Room Chat -->
+            <div class="bg-cardbg border border-darkborder rounded-2xl flex flex-col overflow-hidden h-[400px] lg:h-auto">
+                <div class="p-3 border-b border-darkborder bg-black/40 text-xs font-bold text-gray-300">
+                    Room Chat & Puff Circle
+                </div>
+                <div id="live-room-chat-messages" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs bg-black/20">
+                    <div class="text-gray-400 italic">Welcome to the live smoke session! Say hi to fellow seshers.</div>
+                </div>
+                <div class="p-3 border-t border-darkborder bg-black/40 flex gap-2">
+                    <input type="text" id="live-room-chat-input" onkeypress="handleLiveRoomKey(event)" placeholder="Send message..." class="flex-1 bg-black/50 border border-darkborder rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-neon">
+                    <button onclick="sendLiveRoomMessage()" class="bg-neon hover:bg-neonhover text-black font-bold px-4 py-2 rounded-xl text-xs transition-all">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Owner PIN for Stoner TV Posting & Approvals (Change this to your private PIN)
+        const ADMIN_PIN = "4200";
+        let isAdminUnlocked = false;
+
+        // Floating Sparkling Cannabis Leaves Animation Generator
+        const leafContainer = document.getElementById('leaf-container');
+        const leafIcons = ['fa-cannabis', 'fa-leaf'];
+        for (let i = 0; i < 16; i++) {
+            const leaf = document.createElement('div');
+            leaf.className = 'floating-leaf text-neon/40';
+            leaf.innerHTML = `<i class="fa-solid ${leafIcons[Math.floor(Math.random() * leafIcons.length)]}"></i>`;
+            leaf.style.left = `${Math.random() * 100}vw`;
+            leaf.style.top = `${Math.random() * 100}vh`;
+            leaf.style.fontSize = `${Math.random() * 22 + 12}px`;
+            leaf.style.animationDuration = `${Math.random() * 8 + 6}s, ${Math.random() * 2 + 1.5}s`;
+            leaf.style.animationDelay = `${Math.random() * 5}s`;
+            leafContainer.appendChild(leaf);
+        }
+
+        // Animated TV Snow Fuzz / Static Generator for Stoner TV
+        const snowCanvas = document.getElementById('tv-snow-canvas');
+        const snowCtx = snowCanvas.getContext('2d');
+        let snowAnimFrame = null;
+
+        function resizeSnowCanvas() {
+            if (!snowCanvas) return;
+            snowCanvas.width = 320;
+            snowCanvas.height = 180;
+        }
+        resizeSnowCanvas();
+
+        function renderSnowFuzz() {
+            const w = snowCanvas.width;
+            const h = snowCanvas.height;
+            const imgData = snowCtx.createImageData(w, h);
+            const buffer = new Uint32Array(imgData.data.buffer);
+            for (let i = 0; i < buffer.length; i++) {
+                const shade = (Math.random() * 255) | 0;
+                // Subtle green phosphor tint on static fuzz
+                const r = (shade * 0.75) | 0;
+                const g = shade;
+                const b = (shade * 0.75) | 0;
+                buffer[i] = (255 << 24) | (b << 16) | (g << 8) | r;
+            }
+            snowCtx.putImageData(imgData, 0, 0);
+            snowAnimFrame = requestAnimationFrame(renderSnowFuzz);
+        }
+        renderSnowFuzz();
+
+        function startStonerTV(videoObj = null) {
+            const target = videoObj || stonerTVVideos[0];
+            if (!target) return;
+            const staticScreen = document.getElementById('tv-static-screen');
+            const player = document.getElementById('main-tv-player');
+            const statusPill = document.getElementById('tv-status-pill');
+
+            if (staticScreen) staticScreen.classList.add('hidden');
+            if (snowAnimFrame) {
+                cancelAnimationFrame(snowAnimFrame);
+                snowAnimFrame = null;
+            }
+
+            const autoplayUrl = target.url.includes('?') ? `${target.url}&autoplay=1` : `${target.url}?autoplay=1`;
+            player.src = autoplayUrl;
+            player.classList.remove('hidden');
+
+            document.getElementById('main-tv-title').innerText = target.title;
+            document.getElementById('main-tv-desc').innerText = target.desc;
+            if (statusPill) statusPill.innerText = 'NOW PLAYING';
+        }
+
+        // Clock display
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            document.getElementById('clock-display').innerText = `${hours}:${minutes} ${ampm}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Application State (No Default Avatar Photo)
+        let currentUser = {
+            name: "Guest Stoned",
+            strain: "OG Kush",
+            avatar: "",
+            bio: "Must be 21+ to set up your profile, strain preference, and photo.",
+            puffs: 42,
+            status: "🌿 Ready to Sesh",
+            is21Plus: false
+        };
+
+        let posts = [
+            {
+                id: 1,
+                author: "SnoopVibes",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+                strain: "🔥 OG Kush",
+                content: "Just rolled up a fresh fatty of OG Kush. Who is tuning into the lofi lounge tonight? Let's get this session started! 💨🌿",
+                puffs: 69,
+                comments: [
+                    { author: "CouchLockQueen", text: "Count me in! Just grabbed some snacks too." },
+                    { author: "TerpHunter", text: "OG Kush is unmatched. Enjoy!" }
+                ]
+            },
+            {
+                id: 2,
+                author: "CloudNine",
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+                strain: "💨 Blue Dream",
+                content: "Blue Dream and a warm cup of tea on a Saturday evening. Absolute perfection. How is everyone spending their sesh?",
+                puffs: 42,
+                comments: [
+                    { author: "GreenWizard", text: "Pure bliss right there!" }
+                ]
+            }
+        ];
+
+        let buddies = [
+            { name: "BlazeMaster", strain: "OG Kush", city: "Denver, CO", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150", bio: "Concentrate connoisseur and outdoor grower.", status: "🔥 Currently Lit" },
+            { name: "CouchLockQueen", strain: "Gelato #33", city: "Los Angeles, CA", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150", bio: "Art, music, and heavy indicas.", status: "🛋️ Chilling" },
+            { name: "TerpHunter", strain: "Pineapple Express", city: "Seattle, WA", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150", bio: "Always hunting for the best terp profiles.", status: "🌿 Ready to Sesh" },
+            { name: "PurpleHaze99", strain: "Purple Haze", city: "Austin, TX", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150", bio: "Vintage music & sativa strains all day.", status: "🌿 Ready to Sesh" }
+        ];
+
+        let fanPages = [
+            {
+                id: 1,
+                title: "OG Kush Connoisseurs",
+                creator: "BlazeMaster",
+                desc: "The ultimate hub for celebrating the legendary OG Kush strain, terps, and growing tips.",
+                photo: "https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=500",
+                followers: 128
+            },
+            {
+                id: 2,
+                title: "Lofi & Chill Visuals",
+                creator: "CloudNine",
+                desc: "A dedicated fan page sharing peaceful ambient beats and artwork for late night smoke sessions.",
+                photo: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500",
+                followers: 94
+            }
+        ];
+
+        let stonerTVVideos = [
+            { id: 1, title: "Lofi Hip Hop Radio - Beats to Chill / Smoke To", url: "https://www.youtube.com/embed/5qap5aO4i9A", desc: "Relaxing instrumental beats streamed live 24/7.", thumb: "https://img.youtube.com/vi/5qap5aO4i9A/hqdefault.jpg" },
+            { id: 2, title: "Trippy Cannabis Visualizer & Ambient Music", url: "https://www.youtube.com/embed/36YnV9STBqc", desc: "Mind-bending visual journey for deep sessions.", thumb: "https://img.youtube.com/vi/36YnV9STBqc/hqdefault.jpg" },
+            { id: 3, title: "Classic Stoner Comedy Moments", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", desc: "Good laughs and high energy vibes.", thumb: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg" }
+        ];
+
+        let adminReviewQueue = [
+            { id: 101, title: "Planet Earth - Deep Forest Ambient Chill", url: "https://www.youtube.com/embed/086Tt0rcvRY", desc: "Incredible nature visuals for relaxation.", author: "TerpHunter" }
+        ];
+
+        let liveSeshRooms = [
+            { id: 1, title: "Friday Night Wake & Bake", vibe: "Chill talk & munchies", host: "BlazeMaster", viewers: 14 },
+            { id: 2, title: "Late Night Terp Discussion", vibe: "Extracts & live resins", host: "CouchLockQueen", viewers: 9 }
+        ];
+
+        let loungeMessages = {
+            "Lofi & Chill Sesh": [
+                { author: "LofiGhost", text: "Hey everyone! Turn on some tunes and light up." },
+                { author: "StonedSam", text: "Vibes are immaculate in here tonight." }
+            ],
+            "Indica Couch Lock Club": [
+                { author: "HeavyHitter", text: "I am officially one with my sofa." }
+            ],
+            "Strain Review Hub": [
+                { author: "TerpHunter", text: "Has anyone tried the new Gelato batch?" }
+            ]
+        };
+
+        let currentActiveLounge = "Lofi & Chill Sesh";
+
+        // Navigation Tabs
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-neon', 'text-black', 'shadow-[0_0_10px_rgba(0,255,102,0.3)]');
+                btn.classList.add('text-gray-300', 'hover:text-white', 'hover:bg-white/5');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-300', 'hover:text-white', 'hover:bg-white/5');
+                activeBtn.classList.add('bg-neon', 'text-black', 'shadow-[0_0_10px_rgba(0,255,102,0.3)]');
+            }
+        }
+
+        // Helper for rendering avatar image or neutral silhouette
+        function getAvatarMarkup(avatarUrl, sizeClass = "w-10 h-10") {
+            if (avatarUrl) {
+                return `<img src="${avatarUrl}" class="${sizeClass} rounded-full object-cover border border-neon">`;
+            }
+            return `<div class="${sizeClass} rounded-full bg-black/80 border border-neon flex items-center justify-center text-gray-400 text-xs shrink-0"><i class="fa-solid fa-user"></i></div>`;
+        }
+
+        // Render Feed Posts
+        function renderPosts() {
+            const stream = document.getElementById('posts-stream');
+            stream.innerHTML = '';
+
+            posts.forEach(post => {
+                let commentsHtml = '';
+                post.comments.forEach(c => {
+                    commentsHtml += `
+                        <div class="bg-black/40 rounded-xl p-2.5 text-xs">
+                            <span class="font-bold text-neon">${c.author}:</span> <span class="text-gray-300">${c.text}</span>
+                        </div>
+                    `;
+                });
+
+                const postEl = document.createElement('div');
+                postEl.className = 'bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg space-y-4';
+                postEl.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            ${getAvatarMarkup(post.avatar, "w-10 h-10")}
+                            <div>
+                                <h4 class="font-bold text-white text-sm flex items-center gap-2">
+                                    ${post.author} <span class="text-[10px] bg-neon/10 text-neon border border-neon/30 px-2 py-0.5 rounded-full font-normal">${post.strain}</span>
+                                </h4>
+                                <span class="text-[10px] text-gray-400">Just now &bull; <i class="fa-solid fa-globe text-gray-500"></i> Sesh Circle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-200 leading-relaxed">${post.content}</p>
+                    <div class="flex items-center justify-between pt-3 border-t border-darkborder text-xs text-gray-400">
+                        <button onclick="puffPost(${post.id})" class="flex items-center gap-1.5 bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/30 px-4 py-2 rounded-xl font-bold transition-all">
+                            <i class="fa-solid fa-cannabis"></i> Puff (${post.puffs})
+                        </button>
+                        <span>${post.comments.length} Comments</span>
+                    </div>
+                    <div class="space-y-2 pt-2">
+                        ${commentsHtml}
+                        <div class="flex gap-2 mt-2">
+                            <input type="text" id="comment-input-${post.id}" placeholder="Write a reply..." class="flex-1 bg-black/40 border border-darkborder rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-neon">
+                            <button onclick="addComment(${post.id})" class="bg-white/10 hover:bg-neon hover:text-black text-white px-3 py-2 rounded-xl text-xs font-bold transition-all">Reply</button>
+                        </div>
+                    </div>
+                `;
+                stream.appendChild(postEl);
+            });
+        }
+
+        function puffPost(id) {
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                post.puffs++;
+                currentUser.puffs++;
+                document.getElementById('my-puffs-count').innerText = currentUser.puffs;
+                renderPosts();
+            }
+        }
+
+        function createPost() {
+            const content = document.getElementById('post-content-input').value.trim();
+            const strain = document.getElementById('post-strain-select').value;
+            if (!content) return;
+
+            posts.unshift({
+                id: Date.now(),
+                author: currentUser.name,
+                avatar: currentUser.avatar,
+                strain: strain,
+                content: content,
+                puffs: 1,
+                comments: []
+            });
+
+            document.getElementById('post-content-input').value = '';
+            renderPosts();
+        }
+
+        function addComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                post.comments.push({ author: currentUser.name, text: text });
+                input.value = '';
+                renderPosts();
+            }
+        }
+
+        // Render Buddies
+        function renderBuddies(list) {
+            const grid = document.getElementById('buddies-grid');
+            grid.innerHTML = '';
+
+            list.forEach(b => {
+                const card = document.createElement('div');
+                card.className = 'bg-cardbg border border-darkborder rounded-2xl p-5 shadow-lg flex flex-col justify-between';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="${b.avatar}" class="w-14 h-14 rounded-full object-cover border-2 border-neon">
+                            <div>
+                                <h4 class="font-bold text-white text-base">${b.name}</h4>
+                                <p class="text-xs text-gray-400"><i class="fa-solid fa-location-dot text-neon"></i> ${b.city}</p>
+                                <span class="inline-block mt-1 text-[10px] bg-neon/10 text-neon border border-neon/30 px-2 py-0.5 rounded-full">${b.status}</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-300 mb-3">${b.bio}</p>
+                        <div class="text-xs bg-black/50 border border-darkborder rounded-lg p-2 text-neon font-mono">
+                            Favorite: ${b.strain}
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="openBuddyChat('${b.name}')" class="flex-1 bg-neon hover:bg-neonhover text-black font-bold py-2 rounded-xl text-xs transition-all shadow-[0_0_10px_rgba(0,255,102,0.25)] flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-comment-dots"></i> Message
+                        </button>
+                        <button onclick="alert('Sesh invite sent to ${b.name}!')" class="bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/40 font-bold px-3 py-2 rounded-xl text-xs transition-all" title="Invite to Sesh">
+                            <i class="fa-solid fa-cannabis"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterBuddies() {
+            const query = document.getElementById('buddy-search-input').value.toLowerCase();
+            const strainFilter = document.getElementById('buddy-filter-strain').value;
+
+            const filtered = buddies.filter(b => {
+                const matchQuery = b.name.toLowerCase().includes(query) || b.city.toLowerCase().includes(query) || b.strain.toLowerCase().includes(query);
+                const matchStrain = strainFilter === 'all' || b.strain.includes(strainFilter);
+                return matchQuery && matchStrain;
+            });
+            renderBuddies(filtered);
+        }
+
+        function renderSidebarBuddies() {
+            const list = document.getElementById('sidebar-buddies-list');
+            list.innerHTML = '';
+            buddies.slice(0, 3).forEach(b => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between text-xs';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <img src="${b.avatar}" class="w-8 h-8 rounded-full object-cover border border-neon">
+                        <div>
+                            <div class="font-bold text-white">${b.name}</div>
+                            <div class="text-[10px] text-neon">${b.status}</div>
+                        </div>
+                    </div>
+                    <button onclick="openBuddyChat('${b.name}')" class="bg-white/5 hover:bg-neon hover:text-black text-gray-300 border border-darkborder px-2.5 py-1 rounded-lg transition-all flex items-center gap-1"><i class="fa-solid fa-comment text-[10px]"></i> Chat</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // Render Fan Pages
+        function renderFanPages() {
+            const grid = document.getElementById('fanpages-grid');
+            grid.innerHTML = '';
+
+            fanPages.forEach(page => {
+                const card = document.createElement('div');
+                card.className = 'bg-cardbg border border-darkborder rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between group hover:border-neon/50 transition-all';
+                card.innerHTML = `
+                    <div>
+                        <div class="aspect-video relative overflow-hidden bg-black">
+                            <img src="${page.photo}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                            <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] text-neon font-bold border border-neon/30">
+                                <i class="fa-solid fa-users"></i> ${page.followers} Followers
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <h4 class="font-bold text-white text-base">${page.title}</h4>
+                            <p class="text-xs text-gray-400 mt-1">Created by <span class="text-neon">${page.creator}</span></p>
+                            <p class="text-xs text-gray-300 mt-3 leading-relaxed">${page.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0">
+                        <button onclick="alert('You are now following ' + '${page.title}' + '!')" class="w-full bg-neon/10 hover:bg-neon hover:text-black text-neon border border-neon/40 font-bold py-2.5 rounded-xl text-xs transition-all">
+                            <i class="fa-solid fa-star"></i> Follow Fan Page
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Profile Modal & Photo Upload Handling (With 21+ Check)
+        function openProfileModal() {
+            document.getElementById('modal-name-input').value = currentUser.name === "Guest Stoned" ? "" : currentUser.name;
+            document.getElementById('modal-strain-select').value = currentUser.strain;
+            document.getElementById('modal-bio-input').value = currentUser.is21Plus ? currentUser.bio : "";
+            document.getElementById('modal-avatar-file').value = '';
+            document.getElementById('modal-age-confirm').checked = currentUser.is21Plus;
+            document.getElementById('profile-age-error').classList.add('hidden');
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        function saveProfile() {
+            const ageConfirmed = document.getElementById('modal-age-confirm').checked;
+            const ageError = document.getElementById('profile-age-error');
+            if (!ageConfirmed) {
+                ageError.classList.remove('hidden');
+                return;
+            }
+            ageError.classList.add('hidden');
+            currentUser.is21Plus = true;
+
+            currentUser.name = document.getElementById('modal-name-input').value.trim() || currentUser.name;
+            currentUser.strain = document.getElementById('modal-strain-select').value;
+            currentUser.bio = document.getElementById('modal-bio-input').value.trim() || "21+ Verified Sesher";
+
+            const fileInput = document.getElementById('modal-avatar-file');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentUser.avatar = e.target.result;
+                    updateProfileUI();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                updateProfileUI();
+            }
+
+            closeProfileModal();
+        }
+
+        function updateProfileUI() {
+            document.getElementById('my-name-display').innerText = currentUser.name;
+            document.getElementById('my-strain-display').innerText = "Strain: " + currentUser.strain;
+            document.getElementById('my-bio-display').innerText = currentUser.bio;
+
+            if (currentUser.avatar) {
+                document.getElementById('my-avatar-placeholder').classList.add('hidden');
+                const myAvatarImg = document.getElementById('my-avatar-display');
+                myAvatarImg.src = currentUser.avatar;
+                myAvatarImg.classList.remove('hidden');
+
+                document.getElementById('post-box-avatar-placeholder').classList.add('hidden');
+                const postAvatarImg = document.getElementById('post-box-avatar');
+                postAvatarImg.src = currentUser.avatar;
+                postAvatarImg.classList.remove('hidden');
+            }
+        }
+
+        function updateUserStatus() {
+            const status = document.getElementById('user-status-select').value;
+            currentUser.status = status;
+        }
+
+        // Fan Page Modal Handling
+        function openFanPageModal() {
+            document.getElementById('fanpage-title-input').value = '';
+            document.getElementById('fanpage-desc-input').value = '';
+            document.getElementById('fanpage-photo-file').value = '';
+            document.getElementById('fanpage-modal').classList.remove('hidden');
+        }
+
+        function closeFanPageModal() {
+            document.getElementById('fanpage-modal').classList.add('hidden');
+        }
+
+        function submitFanPage() {
+            const title = document.getElementById('fanpage-title-input').value.trim();
+            const desc = document.getElementById('fanpage-desc-input').value.trim();
+            const fileInput = document.getElementById('fanpage-photo-file');
+
+            if (!title) return;
+
+            let defaultPhoto = "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=500";
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fanPages.unshift({
+                        id: Date.now(),
+                        title: title,
+                        creator: currentUser.name,
+                        desc: desc || "A dedicated community fan hub.",
+                        photo: e.target.result,
+                        followers: 1
+                    });
+                    renderFanPages();
+                    closeFanPageModal();
+                    alert('Fan page created and published successfully!');
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                fanPages.unshift({
+                    id: Date.now(),
+                    title: title,
+                    creator: currentUser.name,
+                    desc: desc || "A dedicated community fan hub.",
+                    photo: defaultPhoto,
+                    followers: 1
+                });
+                renderFanPages();
+                closeFanPageModal();
+                alert('Fan page created and published successfully!');
+            }
+        }
+
+        // Lounge Chat Modal
+        function openLoungeModal(title) {
+            currentActiveLounge = title;
+            document.getElementById('lounge-modal-title').innerText = title;
+            renderLoungeMessages();
+            document.getElementById('lounge-modal').classList.remove('hidden');
+        }
+
+        function closeLoungeModal() {
+            document.getElementById('lounge-modal').classList.add('hidden');
+        }
+
+        function renderLoungeMessages() {
+            const container = document.getElementById('lounge-messages');
+            container.innerHTML = '';
+            const msgs = loungeMessages[currentActiveLounge] || [];
+            msgs.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'bg-black/40 rounded-xl p-3 text-xs';
+                div.innerHTML = `<span class="font-bold text-neon">${m.author}:</span> <span class="text-gray-200">${m.text}</span>`;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendLoungeMessage() {
+            const input = document.getElementById('lounge-chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!loungeMessages[currentActiveLounge]) loungeMessages[currentActiveLounge] = [];
+            loungeMessages[currentActiveLounge].push({ author: currentUser.name, text: text });
+            input.value = '';
+            renderLoungeMessages();
+        }
+
+        function handleLoungeKey(e) {
+            if (e.key === 'Enter') sendLoungeMessage();
+        }
+
+        // Stoner TV & Owner-Only Posting / Queue
+        function normalizeYoutubeEmbed(url) {
+            if (url.includes('watch?v=')) {
+                const vidId = url.split('watch?v=')[1].split('&')[0];
+                return `https://www.youtube.com/embed/${vidId}`;
+            }
+            if (url.includes('youtu.be/')) {
+                const vidId = url.split('youtu.be/')[1].split('?')[0];
+                return `https://www.youtube.com/embed/${vidId}`;
+            }
+            return url;
+        }
+
+        function renderTVPlaylist() {
+            const grid = document.getElementById('tv-playlist-grid');
+            grid.innerHTML = '';
+
+            stonerTVVideos.forEach(v => {
+                const card = document.createElement('div');
+                card.className = 'bg-cardbg border border-darkborder rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:border-neon/50 transition-all group';
+                card.onclick = () => startStonerTV(v);
+                card.innerHTML = `
+                    <div class="aspect-video relative overflow-hidden bg-black">
+                        <img src="${v.thumb}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fa-solid fa-play text-neon text-3xl"></i>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-bold text-white text-sm">${v.title}</h4>
+                        <p class="text-[11px] text-gray-400 mt-1 line-clamp-1">${v.desc}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openVideoSubmitModal() {
+            document.getElementById('video-submit-modal').classList.remove('hidden');
+        }
+
+        function closeVideoSubmitModal() {
+            document.getElementById('video-submit-modal').classList.add('hidden');
+        }
+
+        function submitVideoToAdmin() {
+            const title = document.getElementById('sub-video-title').value.trim();
+            let url = document.getElementById('sub-video-url').value.trim();
+            const desc = document.getElementById('sub-video-desc').value.trim();
+
+            if (!title || !url) return;
+
+            url = normalizeYoutubeEmbed(url);
+
+            adminReviewQueue.push({
+                id: Date.now(),
+                title: title,
+                url: url,
+                desc: desc || "Community submission",
+                author: currentUser.name
+            });
+
+            document.getElementById('sub-video-title').value = '';
+            document.getElementById('sub-video-url').value = '';
+            document.getElementById('sub-video-desc').value = '';
+            closeVideoSubmitModal();
+            updateAdminBadge();
+            alert('Thank you! Your video was submitted for the site owner to review.');
+        }
+
+        // Owner-Only Access Gate
+        function handleAdminAccess() {
+            if (isAdminUnlocked) {
+                openAdminQueueModal();
+            } else {
+                document.getElementById('admin-pin-input').value = '';
+                document.getElementById('admin-pin-error').classList.add('hidden');
+                document.getElementById('admin-pin-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeAdminPinModal() {
+            document.getElementById('admin-pin-modal').classList.add('hidden');
+        }
+
+        function verifyAdminPin() {
+            const entered = document.getElementById('admin-pin-input').value.trim();
+            if (entered === ADMIN_PIN) {
+                isAdminUnlocked = true;
+                closeAdminPinModal();
+                document.getElementById('admin-post-btn').classList.remove('hidden');
+                document.getElementById('admin-lock-icon').className = 'fa-solid fa-unlock';
+                document.getElementById('admin-btn-label').innerText = 'Review Queue';
+                openAdminQueueModal();
+            } else {
+                document.getElementById('admin-pin-error').classList.remove('hidden');
+            }
+        }
+
+        function openAdminPostModal() {
+            if (!isAdminUnlocked) {
+                handleAdminAccess();
+                return;
+            }
+            document.getElementById('admin-post-modal').classList.remove('hidden');
+        }
+
+        function closeAdminPostModal() {
+            document.getElementById('admin-post-modal').classList.add('hidden');
+        }
+
+        function ownerDirectPostVideo() {
+            if (!isAdminUnlocked) return;
+            const title = document.getElementById('owner-video-title').value.trim();
+            let url = document.getElementById('owner-video-url').value.trim();
+            const desc = document.getElementById('owner-video-desc').value.trim();
+
+            if (!title || !url) return;
+            url = normalizeYoutubeEmbed(url);
+
+            const newVideo = {
+                id: Date.now(),
+                title: title,
+                url: url,
+                desc: desc || "Featured on Stoner TV",
+                thumb: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300'
+            };
+
+            stonerTVVideos.unshift(newVideo);
+            renderTVPlaylist();
+            startStonerTV(newVideo);
+
+            document.getElementById('owner-video-title').value = '';
+            document.getElementById('owner-video-url').value = '';
+            document.getElementById('owner-video-desc').value = '';
+            closeAdminPostModal();
+        }
+
+        function openAdminQueueModal() {
+            if (!isAdminUnlocked) return;
+            renderAdminQueue();
+            document.getElementById('admin-queue-modal').classList.remove('hidden');
+        }
+
+        function closeAdminQueueModal() {
+            document.getElementById('admin-queue-modal').classList.add('hidden');
+        }
+
+        function renderAdminQueue() {
+            const list = document.getElementById('admin-queue-list');
+            list.innerHTML = '';
+
+            if (adminReviewQueue.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">No pending video submissions in the queue.</div>`;
+                return;
+            }
+
+            adminReviewQueue.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'bg-black/50 border border-darkborder rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4';
+                div.innerHTML = `
+                    <div>
+                        <h4 class="font-bold text-white text-sm">${item.title}</h4>
+                        <p class="text-xs text-gray-400 mt-0.5">${item.desc}</p>
+                        <span class="inline-block mt-2 text-[10px] bg-neon/10 text-neon border border-neon/30 px-2 py-0.5 rounded-full">Submitted by: ${item.author}</span>
+                    </div>
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <button onclick="approveVideo(${item.id})" class="flex-1 md:flex-none bg-neon hover:bg-neonhover text-black font-bold px-4 py-2 rounded-xl text-xs transition-all">Approve & Post</button>
+                        <button onclick="rejectVideo(${item.id})" class="flex-1 md:flex-none bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/40 font-bold px-4 py-2 rounded-xl text-xs transition-all">Reject</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function approveVideo(id) {
+            if (!isAdminUnlocked) return;
+            const idx = adminReviewQueue.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                const item = adminReviewQueue.splice(idx, 1)[0];
+                stonerTVVideos.push({
+                    id: item.id,
+                    title: item.title,
+                    url: item.url,
+                    desc: item.desc,
+                    thumb: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300'
+                });
+                renderTVPlaylist();
+                renderAdminQueue();
+                updateAdminBadge();
+            }
+        }
+
+        function rejectVideo(id) {
+            if (!isAdminUnlocked) return;
+            const idx = adminReviewQueue.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                adminReviewQueue.splice(idx, 1);
+                renderAdminQueue();
+                updateAdminBadge();
+            }
+        }
+
+        function updateAdminBadge() {
+            document.getElementById('admin-queue-badge').innerText = adminReviewQueue.length;
+        }
+
+        // Live Smoke Sessions
+        function renderLiveSeshRooms() {
+            const grid = document.getElementById('live-sesh-grid');
+            grid.innerHTML = '';
+
+            liveSeshRooms.forEach(room => {
+                const card = document.createElement('div');
+                card.className = 'bg-cardbg border border-darkborder rounded-2xl p-6 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-red-500/50 transition-all';
+                card.innerHTML = `
+                    <div class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> LIVE NOW
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/40 flex items-center justify-center text-red-400 text-2xl mb-4">
+                            <i class="fa-solid fa-video"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-white">${room.title}</h3>
+                        <p class="text-xs text-gray-400 mt-1">Topic: <span class="text-gray-200">${room.vibe}</span></p>
+                        <p class="text-xs text-gray-400 mt-0.5">Host: <span class="text-neon">${room.host}</span></p>
+                        <div class="mt-4 flex items-center gap-2 text-xs text-gray-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-neon animate-pulse"></span> ${room.viewers} Seshers in Room
+                        </div>
+                    </div>
+                    <button onclick="joinLiveSeshRoom('${room.title}', '${room.host}')" class="mt-6 w-full bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 border border-red-500/40 font-bold py-2.5 rounded-xl text-xs transition-all">
+                        Join Live Sesh
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openHostSeshModal() {
+            document.getElementById('host-sesh-modal').classList.remove('hidden');
+        }
+
+        function closeHostSeshModal() {
+            document.getElementById('host-sesh-modal').classList.add('hidden');
+        }
+
+        function createLiveSeshRoom() {
+            const title = document.getElementById('host-room-title').value.trim();
+            const vibe = document.getElementById('host-room-vibe').value.trim();
+            if (!title) return;
+
+            liveSeshRooms.unshift({
+                id: Date.now(),
+                title: title,
+                vibe: vibe || "General Sesh",
+                host: currentUser.name,
+                viewers: 1
+            });
+
+            closeHostSeshModal();
+            renderLiveSeshRooms();
+            joinLiveSeshRoom(title, currentUser.name);
+        }
+
+        function joinLiveSeshRoom(title, host) {
+            document.getElementById('active-room-title').innerText = title;
+            document.getElementById('active-room-host').innerText = host;
+            document.getElementById('room-host-label').innerText = host;
+            document.getElementById('live-room-modal').classList.remove('hidden');
+        }
+
+        function leaveLiveSeshRoom() {
+            document.getElementById('live-room-modal').classList.add('hidden');
+        }
+
+        function sendLiveRoomMessage() {
+            const input = document.getElementById('live-room-chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const chat = document.getElementById('live-room-chat-messages');
+            const div = document.createElement('div');
+            div.innerHTML = `<span class="font-bold text-neon">${currentUser.name}:</span> <span class="text-gray-200">${text}</span>`;
+            chat.appendChild(div);
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function handleLiveRoomKey(e) {
+            if (e.key === 'Enter') sendLiveRoomMessage();
+        }
+
+        // Direct Messaging Between Buddies
+        let buddyChats = {
+            "BlazeMaster": {
+                unread: 1,
+                messages: [
+                    { sender: "BlazeMaster", text: "Yo! Just packed a bowl of fresh OG Kush. You hopping on later?", time: "4:15 PM" }
+                ]
+            },
+            "CouchLockQueen": {
+                unread: 1,
+                messages: [
+                    { sender: "CouchLockQueen", text: "Welcome to SayHighFriends! Let me know if you want to join the Lofi lounge.", time: "3:42 PM" }
+                ]
+            },
+            "TerpHunter": {
+                unread: 0,
+                messages: [
+                    { sender: "TerpHunter", text: "Have you tried the new Pineapple Express batch yet? Crazy terps.", time: "Yesterday" }
+                ]
+            },
+            "PurpleHaze99": {
+                unread: 0,
+                messages: []
+            }
+        };
+
+        let activeDMBuddy = "BlazeMaster";
+
+        function updateUnreadBadge() {
+            const totalUnread = Object.values(buddyChats).reduce((sum, chat) => sum + (chat.unread || 0), 0);
+            const badge = document.getElementById('unread-msg-badge');
+            if (badge) {
+                badge.innerText = totalUnread;
+                badge.style.display = totalUnread > 0 ? 'inline-block' : 'none';
+            }
+        }
+
+        function openBuddyChat(buddyName) {
+            if (!buddyChats[buddyName]) {
+                buddyChats[buddyName] = { unread: 0, messages: [] };
+            }
+            activeDMBuddy = buddyName;
+            buddyChats[buddyName].unread = 0;
+            updateUnreadBadge();
+            switchTab('messages');
+            renderDMConversations();
+            renderActiveDMThread();
+            setTimeout(() => {
+                const input = document.getElementById('dm-chat-input');
+                if (input) input.focus();
+            }, 50);
+        }
+
+        function renderDMConversations() {
+            const list = document.getElementById('dm-conversations-list');
+            if (!list) return;
+            const search = (document.getElementById('dm-buddy-search')?.value || '').toLowerCase();
+            list.innerHTML = '';
+
+            buddies.filter(b => b.name.toLowerCase().includes(search)).forEach(b => {
+                const chat = buddyChats[b.name] || { unread: 0, messages: [] };
+                const lastMsg = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].text : "Start a sesh chat...";
+                const isActive = b.name === activeDMBuddy;
+
+                const item = document.createElement('div');
+                item.onclick = () => openBuddyChat(b.name);
+                item.className = `p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between gap-2 border ${isActive ? 'bg-neon/10 border-neon/50' : 'bg-black/40 border-darkborder hover:border-white/20'}`;
+                item.innerHTML = `
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <img src="${b.avatar}" class="w-10 h-10 rounded-full object-cover border ${isActive ? 'border-neon' : 'border-darkborder'} shrink-0">
+                        <div class="min-w-0">
+                            <div class="font-bold text-white text-xs truncate">${b.name}</div>
+                            <div class="text-[11px] text-gray-400 truncate">${lastMsg}</div>
+                        </div>
+                    </div>
+                    ${chat.unread > 0 ? `<span class="bg-neon text-black text-[10px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0">${chat.unread}</span>` : ''}
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function renderActiveDMThread() {
+            const buddy = buddies.find(b => b.name === activeDMBuddy) || buddies[0];
+            if (!buddy) return;
+
+            document.getElementById('dm-active-avatar').src = buddy.avatar;
+            document.getElementById('dm-active-name').innerText = buddy.name;
+            document.getElementById('dm-active-status').innerText = `${buddy.status} • ${buddy.city}`;
+
+            const container = document.getElementById('dm-messages-container');
+            container.innerHTML = '';
+
+            const chat = buddyChats[buddy.name] || { unread: 0, messages: [] };
+            if (chat.messages.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 text-xs py-12">No messages with <span class="text-neon font-bold">${buddy.name}</span> yet. Say hi or send a sesh invite!</div>`;
+                return;
+            }
+
+            chat.messages.forEach(m => {
+                const isMe = m.sender === 'me';
+                const row = document.createElement('div');
+                row.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+                row.innerHTML = `
+                    <div class="max-w-[78%] rounded-2xl px-4 py-2.5 text-xs ${isMe ? 'bg-neon text-black font-medium rounded-br-sm' : 'bg-cardbg border border-darkborder text-gray-200 rounded-bl-sm'}">
+                        ${m.text}
+                    </div>
+                    <span class="text-[10px] text-gray-500 mt-1 px-1">${isMe ? currentUser.name : buddy.name} &bull; ${m.time}</span>
+                `;
+                container.appendChild(row);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getCurrentTimeLabel() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            m = m < 10 ? '0' + m : m;
+            return `${h}:${m} ${ampm}`;
+        }
+
+        function sendDirectMessage(customText = null) {
+            const input = document.getElementById('dm-chat-input');
+            const text = customText !== null ? customText : input.value.trim();
+            if (!text) return;
+
+            if (!buddyChats[activeDMBuddy]) {
+                buddyChats[activeDMBuddy] = { unread: 0, messages: [] };
+            }
+
+            buddyChats[activeDMBuddy].messages.push({
+                sender: 'me',
+                text: text,
+                time: getCurrentTimeLabel()
+            });
+
+            if (customText === null) input.value = '';
+            renderDMConversations();
+            renderActiveDMThread();
+
+            // Simulated buddy auto-reply for interactive feel
+            const replyingBuddy = activeDMBuddy;
+            const replies = [
+                "Bet! Lighting one up right now 🌿💨",
+                "For sure, let's hop into the Lofi & Chill lounge!",
+                "Haha facts! What strain are you smoking on?",
+                "Say less, pass the virtual rotation 🔥"
+            ];
+            setTimeout(() => {
+                const replyText = replies[Math.floor(Math.random() * replies.length)];
+                buddyChats[replyingBuddy].messages.push({
+                    sender: replyingBuddy,
+                    text: replyText,
+                    time: getCurrentTimeLabel()
+                });
+                const onMessagesTab = !document.getElementById('tab-messages').classList.contains('hidden');
+                if (onMessagesTab && activeDMBuddy === replyingBuddy) {
+                    renderDMConversations();
+                    renderActiveDMThread();
+                } else {
+                    buddyChats[replyingBuddy].unread = (buddyChats[replyingBuddy].unread || 0) + 1;
+                    updateUnreadBadge();
+                    renderDMConversations();
+                }
+            }, 1100);
+        }
+
+        function sendQuickSeshInvite() {
+            sendDirectMessage(`🌿 Hey ${activeDMBuddy}, want to spark up a live sesh together?`);
+        }
+
+        function handleDMKey(e) {
+            if (e.key === 'Enter') sendDirectMessage();
+        }
+
+        // Initialize App on Load
+        renderPosts();
+        renderBuddies(buddies);
+        renderSidebarBuddies();
+        renderTVPlaylist();
+        renderLiveSeshRooms();
+        renderFanPages();
+        updateAdminBadge();
+        renderDMConversations();
+        renderActiveDMThread();
+        updateUnreadBadge();
+    </script>
+</body>
+</html>
